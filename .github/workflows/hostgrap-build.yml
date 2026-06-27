@@ -1,0 +1,49 @@
+name: HostGrap Remote Support Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-2022
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Inject HostGrap Configurations
+        shell: bash
+        run: |
+          mkdir -p src
+          cat << 'EOF' > src/config.json
+          {
+            "api_server": "http://remotedesk.hglk.link:21114",
+            "id_server": "remotedesk.hglk.link",
+            "relay_server": "remotedesk.hglk.link",
+            "key": "LyAnbMUs2DAvCngHCVn8rIXXr48L8bBlSK8xgypAzek=",
+            "app_name": "HostGrap Remote Support",
+            "exe_name": "HostGrap-Support",
+            "icon": ""
+          }
+          EOF
+          echo "HostGrap Config successfully injected."
+
+      - name: Install Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          target: x86_64-pc-windows-msvc
+
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgGitCommitId: '2024.04.26' # Stable vcpkg release
+
+      - name: Build RustDesk Binary
+        run: |
+          cargo build --release
+
+      - name: Upload HostGrap EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: HostGrap-Support-EXE
+          path: target/release/rustdesk.exe
