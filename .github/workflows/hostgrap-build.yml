@@ -1,25 +1,28 @@
-name: HostGrap Remote Support Quick Build
+name: HostGrap Remote Support Filename Method
 
 on:
   workflow_dispatch:
 
 jobs:
-  patch-binary:
+  build-filename:
     runs-on: ubuntu-latest
     steps:
       - name: Download Official RustDesk Client
         run: |
           wget https://github.com/rustdesk/rustdesk/releases/download/1.4.8/rustdesk-1.4.8-x86_64.exe -O rustdesk.exe
 
-      - name: Inject HostGrap Configurations
+      - name: Rename with HostGrap Server Settings
         run: |
-          # උඹේ සෙටින්ග්ස් ටික Base64 කරලා නිල බයිනරි එකේ අගට ඉන්ජෙක්ට් කරනවා
-          CONFIG_DATA='{"api_server": "http://remotedesk.hglk.link:21114", "id_server": "remotedesk.hglk.link", "relay_server": "remotedesk.hglk.link", "key": "LyAnbMUs2DAvCngHCVn8rIXXr48L8bBlSK8xgypAzek=", "app_name": "HostGrap Remote Support", "exe_name": "HostGrap-Support", "icon": ""}'
-          echo -n "$CONFIG_DATA" >> rustdesk.exe
-          mv rustdesk.exe HostGrap-Support.exe
+          # RustDesk එකේ නම ඇතුළට host, key සහ api සේරම Format එකකට දානවා
+          # Format: rustdesk-host=<host>-key=<key>.exe
+          SERVER_HOST="remotedesk.hglk.link"
+          SERVER_KEY="LyAnbMUs2DAvCngHCVn8rIXXr48L8bBlSK8xgypAzek="
+          
+          NEW_NAME="HostGrap-Support-host=${SERVER_HOST},key=${SERVER_KEY}.exe"
+          mv rustdesk.exe "$NEW_NAME"
 
       - name: Upload HostGrap Application
         uses: actions/upload-artifact@v4
         with:
           name: HostGrap-Support-EXE
-          path: HostGrap-Support.exe
+          path: "*.exe"
