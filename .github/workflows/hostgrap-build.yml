@@ -1,49 +1,25 @@
-name: HostGrap Remote Support Build
+name: HostGrap Remote Support Quick Build
 
 on:
   workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: windows-2022
+  patch-binary:
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      - name: Download Official RustDesk Client
+        run: |
+          wget https://github.com/rustdesk/rustdesk/releases/download/1.4.8/rustdesk-1.4.8-x86_64.exe -O rustdesk.exe
 
       - name: Inject HostGrap Configurations
-        shell: bash
         run: |
-          mkdir -p src
-          cat << 'EOF' > src/config.json
-          {
-            "api_server": "http://remotedesk.hglk.link:21114",
-            "id_server": "remotedesk.hglk.link",
-            "relay_server": "remotedesk.hglk.link",
-            "key": "LyAnbMUs2DAvCngHCVn8rIXXr48L8bBlSK8xgypAzek=",
-            "app_name": "HostGrap Remote Support",
-            "exe_name": "HostGrap-Support",
-            "icon": ""
-          }
-          EOF
-          echo "HostGrap Config successfully injected."
+          # උඹේ සෙටින්ග්ස් ටික Base64 කරලා නිල බයිනරි එකේ අගට ඉන්ජෙක්ට් කරනවා
+          CONFIG_DATA='{"api_server": "http://remotedesk.hglk.link:21114", "id_server": "remotedesk.hglk.link", "relay_server": "remotedesk.hglk.link", "key": "LyAnbMUs2DAvCngHCVn8rIXXr48L8bBlSK8xgypAzek=", "app_name": "HostGrap Remote Support", "exe_name": "HostGrap-Support", "icon": ""}'
+          echo -n "$CONFIG_DATA" >> rustdesk.exe
+          mv rustdesk.exe HostGrap-Support.exe
 
-      - name: Install Rust Toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: stable
-          target: x86_64-pc-windows-msvc
-
-      - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v11
-        with:
-          vcpkgGitCommitId: '2024.04.26' # Stable vcpkg release
-
-      - name: Build RustDesk Binary
-        run: |
-          cargo build --release
-
-      - name: Upload HostGrap EXE
+      - name: Upload HostGrap Application
         uses: actions/upload-artifact@v4
         with:
           name: HostGrap-Support-EXE
-          path: target/release/rustdesk.exe
+          path: HostGrap-Support.exe
